@@ -1,4 +1,4 @@
-# NMRFx Processor #
+# NMRFx Structure #
 
 ### About nmrfx structure ###
 
