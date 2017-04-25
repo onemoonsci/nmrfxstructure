@@ -1,0 +1,250 @@
+/*
+ * NMRFx Structure : A Program for Calculating Structures 
+ * Copyright (C) 2004-2017 One Moon Scientific, Inc., Westfield, N.J., USA
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package org.nmrfx.processor.datasets.peaks;
+
+import org.nmrfx.structure.chemistry.Atom;
+import org.nmrfx.structure.chemistry.Compound;
+import org.nmrfx.structure.chemistry.Molecule;
+import org.nmrfx.structure.chemistry.io.NMRStarReader;
+import org.nmrfx.processor.star.Loop;
+import org.nmrfx.processor.star.ParseException;
+import org.nmrfx.processor.star.Saveframe;
+import org.nmrfx.structure.utilities.NvUtil;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+/**
+ *
+ * @author Bruce Johnson
+ */
+public class AtomResonance implements Resonance {
+
+    String name = "";
+    String atomName = "";
+    List<PeakDimContrib> pdCs = new ArrayList<>();
+    final long id;
+    Atom atom = null;
+    private ResonanceSet resonanceSet = null;
+
+    public AtomResonance(long id) {
+        this.id = id;
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public String getAtomName() {
+        return atomName;
+    }
+
+    @Override
+    public String getIDString() {
+        return String.valueOf(id);
+
+    }
+
+    @Override
+    public long getID() {
+        return id;
+    }
+
+    @Override
+    public Iterator getIterator() {
+        return pdCs.iterator();
+    }
+
+    @Override
+    public void merge(Resonance resB) {
+
+    }
+
+    @Override
+    public void removePeakDimContrib(PeakDimContrib pdC) {
+        pdCs.remove(pdC);
+    }
+
+    @Override
+    public void addPeakDimContrib(PeakDimContrib pdC) {
+        pdCs.add(pdC);
+    }
+
+    public Atom getAtom() {
+        return atom;
+    }
+
+    public ResonanceSet getResonanceSet() {
+        return resonanceSet;
+    }
+
+    public void setResonanceSet(ResonanceSet resonanceSet) {
+        this.resonanceSet = resonanceSet;
+    }
+
+    public void clearResonanceSet(AtomResonance resonance) {
+        getResonanceSet().removeResonance(resonance);
+        resonanceSet = null;
+    }
+
+    public static void processSTAR3ResonanceList(final NMRStarReader nmrStar, Saveframe saveframe) throws ParseException {
+        // fixme unused String listName = saveframe.getValue(interp,"_Resonance_linker_list","Sf_framecode");
+        // FIXME String details = saveframe.getValue(interp,"_Resonance_linker_list","Details");
+
+        //  FIXME Should have Resonance lists PeakList peakList = new PeakList(listName,nDim);
+        Loop loop = saveframe.getLoop("_Resonance");
+        if (loop == null) {
+            throw new ParseException("No \"_Resonance\" loop");
+        }
+        List<String> idColumn = loop.getColumnAsList("ID");
+        List<String> nameColumn = loop.getColumnAsList("Name");
+        List<String> resSetColumn = loop.getColumnAsList("Resonance_set_ID");
+        // fixme unused ArrayList ssColumn = loop.getColumnAsList("Spin_system_ID");
+        AtomResonanceFactory resFactory = (AtomResonanceFactory) PeakDim.resFactory;
+        for (int i = 0, n = idColumn.size(); i < n; i++) {
+            String value = null;
+            long idNum = 0;
+            if ((value = NvUtil.getColumnValue(idColumn, i)) != null) {
+                idNum = NvUtil.toLong(value);
+            } else {
+                //throw new TclException(interp,"Invalid id \""+value+"\"");
+                continue;
+            }
+
+            AtomResonance resonance = (AtomResonance) resFactory.get(idNum);
+            if (resonance == null) {
+                resonance = (AtomResonance) resFactory.build(idNum);
+            }
+            if ((value = NvUtil.getColumnValue(nameColumn, i)) != null) {
+                resonance.setName(value);
+            }
+            if ((value = NvUtil.getColumnValue(resSetColumn, i)) != null) {
+                long resSet = NvUtil.toLong(value);
+                ResonanceSet resonanceSet = ResonanceSet.get(resSet);
+                if (resonanceSet == null) {
+                    resonanceSet = ResonanceSet.newInstance(resSet);
+                }
+                resonanceSet.addResonance(resonance);
+            }
+            /* FIXME handle spinSystem
+             if ((value = NvUtil.getColumnValue(ssColumn,i)) != null) {
+             long spinSystem = NvUtil.toLong(interp,value);
+             resonance.setSpinSystem(spinSystem);
+             }
+             */
+        }
+
+        loop = saveframe.getLoop("_Resonance_assignment");
+        if (loop != null) {
+            List<String> resSetIDColumn = loop.getColumnAsList("Resonance_set_ID");
+            List<String> entityAssemblyIDColumn = loop.getColumnAsList("Entity_assembly_ID");
+            List<String> entityIDColumn = loop.getColumnAsList("Entity_ID");
+            List<String> compIdxIDColumn = loop.getColumnAsList("Comp_index_ID");
+            List<String> compIDColumn = loop.getColumnAsList("Comp_ID");
+            List<String> atomIDColumn = loop.getColumnAsList("Atom_ID");
+            // fixme unused ArrayList atomSetIDColumn = loop.getColumnAsList("Atom_set_ID");
+            for (int i = 0, n = resSetIDColumn.size(); i < n; i++) {
+                String value = null;
+                long idNum = 0;
+                if ((value = NvUtil.getColumnValue(resSetIDColumn, i)) != null) {
+                    idNum = NvUtil.toLong(value);
+                } else {
+                    //throw new TclException("Invalid peak id value at row \""+i+"\"");
+                    continue;
+                }
+                ResonanceSet resonanceSet = ResonanceSet.get(idNum);
+                if (resonanceSet == null) {
+                    System.out.println("Resonance set " + idNum + " doesn't exist");
+                    continue;
+                }
+                String atomName = "";
+                String entityName = "";
+                String iRes = "";
+                String entityAssemblyID = "";
+                String entityID = "";
+                if ((value = NvUtil.getColumnValue(entityAssemblyIDColumn, i)) != null) {
+                    entityAssemblyID = value;
+                }
+                if (entityAssemblyID.equals("")) {
+                    entityAssemblyID = "1";
+                }
+                if ((value = NvUtil.getColumnValue(entityIDColumn, i)) != null) {
+                    entityID = value;
+                } else {
+                    throw new ParseException("No entity ID");
+                }
+                if ((value = NvUtil.getColumnValue(compIdxIDColumn, i)) != null) {
+                    iRes = value;
+                } else {
+                    throw new ParseException("No compound ID");
+                }
+                if ((value = NvUtil.getColumnValue(atomIDColumn, i)) != null) {
+                    atomName = value;
+                } else {
+                    throw new ParseException("No atom ID");
+                }
+                // fixme if ((value = NvUtil.getColumnValue(atomSetIDColumn,i)) != null) {
+                // fixme unused atomSetNum = NvUtil.toLong(interp,value);
+                //}
+
+                String mapID = entityAssemblyID + "." + entityID + "." + iRes;
+                Compound compound = (Compound) Molecule.compoundMap.get(mapID);
+                if (compound == null) {
+                    //throw new TclException("invalid compound in assignments saveframe \""+mapID+"\"");
+                    System.err.println("invalid compound in assignments saveframe \"" + mapID + "\"");
+                    continue;
+                }
+                Atom atom = compound.getAtomLoose(atomName);
+                if (atom == null) {
+                    if (atomName.equals("H")) {
+                        atom = compound.getAtom(atomName + "1");
+                    }
+                }
+                if (atom == null) {
+                    System.err.println("invalid atom in assignments saveframe \"" + mapID + "." + atomName + "\"");
+                } else {
+                    resonanceSet.setAtom(atom);
+                }
+            }
+        }
+    }
+
+    public List<PeakDim> getPeakDims() {
+        ArrayList<PeakDim> peakDims = new ArrayList<>();
+        Iterator iter = getIterator();
+        while (iter.hasNext()) {
+            PeakDimContrib pdc = (PeakDimContrib) iter.next();
+            PeakDim peakDim = pdc.getPeakDim();
+            peakDims.add(peakDim);
+        }
+        /*for (int i=0;i<peakDimContribs.size();i++) {
+         PeakDim peakDim = ((PeakDimContrib) peakDimContribs.get(i)).getPeakDim();
+         peakDims.add(peakDim);
+         }*/
+        return peakDims;
+    }
+
+}
