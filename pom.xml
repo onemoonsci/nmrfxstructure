@@ -13,7 +13,7 @@
     <artifactId>structure</artifactId>
     <packaging>jar</packaging>
     <version>10.1.1</version>
-    <name>dcchem_os</name>
+    <name>nmrfxstructure</name>
     <url>http://maven.apache.org</url>
     <dependencies>
         <dependency>
