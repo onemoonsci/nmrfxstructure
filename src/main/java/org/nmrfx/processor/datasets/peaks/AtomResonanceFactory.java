@@ -15,9 +15,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.nmrfx.processor.datasets.peaks;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -28,7 +28,7 @@ import java.util.TreeMap;
  */
 public class AtomResonanceFactory extends ResonanceFactory {
 
-    Map<Long, AtomResonance> map = new HashMap<>();
+    static Map<Long, AtomResonance> map = new HashMap<>();
     private static long lastID = -1;
     private static Long[] arrayView = null;
 
@@ -44,28 +44,126 @@ public class AtomResonanceFactory extends ResonanceFactory {
         return resonance;
     }
 
-    public Resonance build(PeakDimContrib pdC) {
-        Resonance resonance = build();
-        resonance.addPeakDimContrib(pdC);
-        return resonance;
-    }
-
     public Resonance get(long id) {
         return map.get(id);
     }
 
-    public void clean() {
+    public static void clean() {
         Map<Long, AtomResonance> resonancesNew = new TreeMap<Long, AtomResonance>();
         for (Map.Entry<Long, AtomResonance> entry : map.entrySet()) {
             AtomResonance resonance = entry.getValue();
-            if (((resonance.pdCs != null) && (resonance.pdCs.size() != 0))) {
+            if (((resonance.getPeakDims() != null) && (resonance.getPeakDims().size() != 0))) {
                 resonancesNew.put(entry.getKey(), resonance);
-            } else if (resonance.getResonanceSet() != null) {
-                resonance.getResonanceSet().removeResonance(resonance);
             }
         }
         map.clear();
         map = resonancesNew;
+        arrayView = null;
+    }
+
+    public synchronized static HashMap<String, ArrayList<AtomResonance>> getLabelMap() {
+        clean();
+        HashMap<String, ArrayList<AtomResonance>> labelMap = new HashMap<>();
+        map.values().forEach((resonance) -> {
+            String label = resonance.getName();
+            if ((label != null) && (label.length() != 0)) {
+                label = label.trim().toUpperCase();
+                if ((label.length() > 1) && Character.isLetter(label.charAt(0)) && Character.isDigit(label.charAt(1))) {
+                    label = label.substring(1);
+                }
+                ArrayList resList = labelMap.get(label);
+                if (resList == null) {
+                    resList = new ArrayList<>();
+                    labelMap.put(label, resList);
+                }
+
+                resList.add(resonance);
+            }
+        });
+        return labelMap;
+    }
+
+    public static AtomResonance merge(AtomResonance resonanceA, AtomResonance resonanceB) {
+        if (resonanceA == resonanceB) {
+            return null;
+        }
+        // FIXME  should we also test if they have names assigned and the names are different
+        if ((resonanceA.getAtom() != null) && (resonanceB.getAtom() != null)) {
+            if (resonanceA.getAtom() != resonanceB.getAtom()) {
+                System.out.println("resonance merge:  both resonances have atoms");
+                return null;
+            }
+        }
+        if ((resonanceA.getAtom() == null) && (resonanceB.getAtom() != null)) {
+            AtomResonance hold = resonanceA;
+            resonanceA = resonanceB;
+            resonanceB = hold;
+        } else if (resonanceA.getName().equals("") && !resonanceB.getName().equals("")) {
+            AtomResonance hold = resonanceA;
+            resonanceA = resonanceB;
+            resonanceB = hold;
+        }
+        for (PeakDim peakDim : resonanceB.peakDims) {
+            resonanceA.add(peakDim);
+
+        }
+        resonanceB.peakDims = null;
+        map.remove(resonanceB.id);
+        arrayView = null;
+        return resonanceA;
+    }
+
+    public static synchronized void merge(String condition, double tol) {
+        HashMap<String, ArrayList<AtomResonance>> labelMap = getLabelMap();
+        for (String label : labelMap.keySet()) {
+            ArrayList<AtomResonance> resList = labelMap.get(label);
+            // find res with atom
+            // if none find res closest to mean
+            // or resonance with most peaks    
+            // merge remaining
+            AtomResonance refRes = null;
+            for (AtomResonance res : resList) {
+                if (res.getPeakCount(condition) > 0) {
+                    if (res.getAtom() != null) {
+                        refRes = res;
+                        break;
+                    }
+                }
+            }
+            if (refRes == null) {
+                int maxCount = 0;
+                for (AtomResonance res : resList) {
+                    int nPeakDims = res.getPeakCount(condition);
+                    if (nPeakDims > maxCount) {
+                        maxCount = nPeakDims;
+                        refRes = res;
+                    }
+                }
+            }
+            if (refRes != null) {
+                Double ppmAvg = refRes.getPPMAvg(null);
+                Double widthAvg = refRes.getWidthAvg(null);
+                if (ppmAvg == null) {
+                    continue;
+                }
+                if (widthAvg < 0.05) {
+                    widthAvg = 0.05;
+                }
+                for (AtomResonance res : resList) {
+                    if (res == refRes) {
+                        continue;
+                    }
+                    if (res.getPeakCount(condition) == 0) {
+                        continue;
+                    }
+                    double ppmAvg2 = res.getPPMAvg(null);
+                    double delta = Math.abs(ppmAvg - ppmAvg2);
+                    if (delta < (tol * widthAvg)) {
+                        refRes = merge(refRes, res);
+                    }
+                }
+            }
+        }
         arrayView = null;
     }
 

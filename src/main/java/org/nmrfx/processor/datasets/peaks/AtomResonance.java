@@ -15,7 +15,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.nmrfx.processor.datasets.peaks;
 
 import org.nmrfx.structure.chemistry.Atom;
@@ -26,88 +25,34 @@ import org.nmrfx.processor.star.Loop;
 import org.nmrfx.processor.star.ParseException;
 import org.nmrfx.processor.star.Saveframe;
 import org.nmrfx.structure.utilities.NvUtil;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
  *
  * @author Bruce Johnson
  */
-public class AtomResonance implements Resonance {
+public class AtomResonance extends SimpleResonance {
 
-    String name = "";
-    String atomName = "";
-    List<PeakDimContrib> pdCs = new ArrayList<>();
-    final long id;
     Atom atom = null;
-    private ResonanceSet resonanceSet = null;
 
     public AtomResonance(long id) {
-        this.id = id;
+        super(id);
     }
 
-    @Override
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    @Override
     public String getAtomName() {
-        return atomName;
+        if (atom != null) {
+            return atom.getFullName();
+        } else {
+            return super.getAtomName();
+        }
     }
 
-    @Override
-    public String getIDString() {
-        return String.valueOf(id);
-
-    }
-
-    @Override
-    public long getID() {
-        return id;
-    }
-
-    @Override
-    public Iterator getIterator() {
-        return pdCs.iterator();
-    }
-
-    @Override
-    public void merge(Resonance resB) {
-
-    }
-
-    @Override
-    public void removePeakDimContrib(PeakDimContrib pdC) {
-        pdCs.remove(pdC);
-    }
-
-    @Override
-    public void addPeakDimContrib(PeakDimContrib pdC) {
-        pdCs.add(pdC);
+    public void setAtom(Atom atom) {
+        this.atom = atom;
     }
 
     public Atom getAtom() {
         return atom;
-    }
-
-    public ResonanceSet getResonanceSet() {
-        return resonanceSet;
-    }
-
-    public void setResonanceSet(ResonanceSet resonanceSet) {
-        this.resonanceSet = resonanceSet;
-    }
-
-    public void clearResonanceSet(AtomResonance resonance) {
-        getResonanceSet().removeResonance(resonance);
-        resonanceSet = null;
     }
 
     public static void processSTAR3ResonanceList(final NMRStarReader nmrStar, Saveframe saveframe) throws ParseException {
@@ -141,14 +86,14 @@ public class AtomResonance implements Resonance {
             if ((value = NvUtil.getColumnValue(nameColumn, i)) != null) {
                 resonance.setName(value);
             }
-            if ((value = NvUtil.getColumnValue(resSetColumn, i)) != null) {
-                long resSet = NvUtil.toLong(value);
-                ResonanceSet resonanceSet = ResonanceSet.get(resSet);
-                if (resonanceSet == null) {
-                    resonanceSet = ResonanceSet.newInstance(resSet);
-                }
-                resonanceSet.addResonance(resonance);
-            }
+//            if ((value = NvUtil.getColumnValue(resSetColumn, i)) != null) {
+//                long resSet = NvUtil.toLong(value);
+//                ResonanceSet resonanceSet = ResonanceSet.get(resSet);
+//                if (resonanceSet == null) {
+//                    resonanceSet = ResonanceSet.newInstance(resSet);
+//                }
+//                resonanceSet.addResonance(resonance);
+//            }
             /* FIXME handle spinSystem
              if ((value = NvUtil.getColumnValue(ssColumn,i)) != null) {
              long spinSystem = NvUtil.toLong(interp,value);
@@ -175,11 +120,11 @@ public class AtomResonance implements Resonance {
                     //throw new TclException("Invalid peak id value at row \""+i+"\"");
                     continue;
                 }
-                ResonanceSet resonanceSet = ResonanceSet.get(idNum);
-                if (resonanceSet == null) {
-                    System.out.println("Resonance set " + idNum + " doesn't exist");
-                    continue;
-                }
+//                ResonanceSet resonanceSet = ResonanceSet.get(idNum);
+//                if (resonanceSet == null) {
+//                    System.out.println("Resonance set " + idNum + " doesn't exist");
+//                    continue;
+//                }
                 String atomName = "";
                 String entityName = "";
                 String iRes = "";
@@ -226,25 +171,13 @@ public class AtomResonance implements Resonance {
                 if (atom == null) {
                     System.err.println("invalid atom in assignments saveframe \"" + mapID + "." + atomName + "\"");
                 } else {
-                    resonanceSet.setAtom(atom);
+//                    resonance.setAtom(atom);
                 }
             }
         }
     }
 
     public List<PeakDim> getPeakDims() {
-        ArrayList<PeakDim> peakDims = new ArrayList<>();
-        Iterator iter = getIterator();
-        while (iter.hasNext()) {
-            PeakDimContrib pdc = (PeakDimContrib) iter.next();
-            PeakDim peakDim = pdc.getPeakDim();
-            peakDims.add(peakDim);
-        }
-        /*for (int i=0;i<peakDimContribs.size();i++) {
-         PeakDim peakDim = ((PeakDimContrib) peakDimContribs.get(i)).getPeakDim();
-         peakDims.add(peakDim);
-         }*/
         return peakDims;
     }
-
 }
