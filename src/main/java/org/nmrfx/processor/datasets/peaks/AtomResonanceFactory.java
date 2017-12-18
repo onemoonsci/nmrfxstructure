@@ -21,16 +21,27 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
+import org.nmrfx.structure.chemistry.Atom;
+import org.nmrfx.structure.chemistry.Molecule;
 
 /**
  *
  * @author Bruce Johnson
  */
-public class AtomResonanceFactory extends ResonanceFactory {
+public class AtomResonanceFactory extends ResonanceFactory implements FreezeListener {
 
     static Map<Long, AtomResonance> map = new HashMap<>();
     private static long lastID = -1;
     private static Long[] arrayView = null;
+
+    public AtomResonanceFactory() {
+    }
+
+    @Override
+    public void init() {
+        System.out.println("register freeze listener");
+        PeakList.registerFreezeListener(this);
+    }
 
     public Resonance build() {
         lastID++;
@@ -167,4 +178,46 @@ public class AtomResonanceFactory extends ResonanceFactory {
         arrayView = null;
     }
 
+    public static void assignFrozenAtoms(String condition) {
+        for (AtomResonance res : map.values()) {
+            for (PeakDim peakDim : res.peakDims) {
+                if (peakDim.getPeak().getPeakList().getSampleConditionLabel().equals(condition)) {
+                    if (peakDim.isFrozen()) {
+                        Double ppmAvg = res.getPPMAvg(condition);
+                        Atom atom = Molecule.getAtomByName(peakDim.getLabel());
+                        if (atom != null) {
+                            atom.setPPM(ppmAvg);
+                            res.atomName = atom.getFullName();
+                            break;
+                        }
+                    }
+                }
+
+            }
+
+        }
+    }
+
+    @Override
+    public void freezeHappened(Peak peak, boolean state) {
+        System.out.println("freeze " + peak.getName() + " " + state);
+        for (PeakDim peakDim : peak.peakDim) {
+            String condition = peak.getPeakList().getSampleConditionLabel();
+            AtomResonance res = (AtomResonance) peakDim.getResonance();
+            Double ppmAvg = res.getPPMAvg(condition);
+            Atom atom = Molecule.getAtomByName(peakDim.getLabel());
+            System.out.println(ppmAvg);
+            if (peakDim.isFrozen()) {
+                if (atom != null) {
+                    if (ppmAvg != null) {
+                        atom.setPPM(ppmAvg);
+                    }
+                    res.atomName = atom.getFullName();
+                }
+            } else {
+                atom.setPPMValidity(0, false);
+                res.atomName = "";
+            }
+        }
+    }
 }
