@@ -23,13 +23,13 @@ import org.nmrfx.structure.chemistry.io.PDBFile;
 import org.nmrfx.structure.chemistry.io.PPMFiles;
 import org.nmrfx.structure.chemistry.io.SDFile;
 import org.nmrfx.structure.chemistry.io.Sequence;
-import static org.nmrfx.processor.project.ProjectLoader.currentProjectDir;
+import static org.nmrfx.processor.project.Project.currentProjectDir;
 
 /**
  *
  * @author Bruce Johnson
  */
-public class StructureProjectLoader extends ProjectLoader {
+public class StructureProject extends Project {
 
     public void loadStructureProject(Path projectDir) throws IOException, MoleculeIOException, IllegalStateException {
         loadProject(projectDir);
