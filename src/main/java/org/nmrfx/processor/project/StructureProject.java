@@ -13,6 +13,9 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -23,13 +26,46 @@ import org.nmrfx.structure.chemistry.io.PDBFile;
 import org.nmrfx.structure.chemistry.io.PPMFiles;
 import org.nmrfx.structure.chemistry.io.SDFile;
 import org.nmrfx.structure.chemistry.io.Sequence;
-import static org.nmrfx.processor.project.Project.currentProjectDir;
 
 /**
  *
  * @author Bruce Johnson
  */
 public class StructureProject extends Project {
+
+    public final Map<String, Molecule> molecules = new HashMap<>();
+
+    public StructureProject(String name) {
+        super(name);
+    }
+
+    public static StructureProject getActive() {
+        Project project = Project.getActive();
+        if (project == null) {
+            project = new StructureProject("Untitled 1");
+        }
+        return (StructureProject) project;
+    }
+
+    public Collection<Molecule> getMolecules() {
+        return molecules.values();
+    }
+
+    public Molecule getMolecule(String name) {
+        return molecules.get(name);
+    }
+
+    public void putMolecule(Molecule molecule) {
+        molecules.put(molecule.getName(), molecule);
+    }
+
+    public void clearAllMolecules() {
+        molecules.clear();
+    }
+
+    public void removeMolecule(String name) {
+        molecules.remove(name);
+    }
 
     public void loadStructureProject(Path projectDir) throws IOException, MoleculeIOException, IllegalStateException {
         loadProject(projectDir);
@@ -57,11 +93,11 @@ public class StructureProject extends Project {
 
             }
         }
-        currentProjectDir = projectDir;
+        this.projectDir = projectDir;
     }
 
     public void saveProject() throws IOException {
-        if (currentProjectDir == null) {
+        if (projectDir == null) {
             throw new IllegalArgumentException("Project directory not set");
         }
         super.saveProject();
@@ -161,10 +197,10 @@ public class StructureProject extends Project {
         }
         FileSystem fileSystem = FileSystems.getDefault();
 
-        if (currentProjectDir == null) {
+        if (projectDir == null) {
             throw new IllegalArgumentException("Project directory not set");
         }
-        Path projectDir = currentProjectDir;
+        Path projectDir = this.projectDir;
         int ppmSet = 0;
         String fileName = String.valueOf(ppmSet) + "_" + "ppm.txt";
         String subDir = refMode ? "refshifts" : "shifts";
