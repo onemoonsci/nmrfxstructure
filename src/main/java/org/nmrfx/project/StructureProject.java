@@ -5,7 +5,6 @@
  */
 package org.nmrfx.project;
 
-import org.nmrfx.project.Project;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.DirectoryIteratorException;
@@ -14,6 +13,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -66,6 +66,10 @@ public class StructureProject extends Project {
 
     public void removeMolecule(String name) {
         molecules.remove(name);
+    }
+
+    public void loadStructureProject(String projectDir) throws IOException, MoleculeIOException, IllegalStateException {
+        loadStructureProject(Paths.get(projectDir));
     }
 
     public void loadStructureProject(Path projectDir) throws IOException, MoleculeIOException, IllegalStateException {
@@ -201,7 +205,6 @@ public class StructureProject extends Project {
         if (projectDir == null) {
             throw new IllegalArgumentException("Project directory not set");
         }
-        Path projectDir = this.projectDir;
         int ppmSet = 0;
         String fileName = String.valueOf(ppmSet) + "_" + "ppm.txt";
         String subDir = refMode ? "refshifts" : "shifts";
