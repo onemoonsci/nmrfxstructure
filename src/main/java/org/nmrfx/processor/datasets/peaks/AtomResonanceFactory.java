@@ -30,9 +30,9 @@ import org.nmrfx.structure.chemistry.Molecule;
  */
 public class AtomResonanceFactory extends ResonanceFactory implements FreezeListener {
 
-    static Map<Long, AtomResonance> map = new HashMap<>();
-    private static long lastID = -1;
-    private static Long[] arrayView = null;
+    Map<Long, AtomResonance> map = new HashMap<>();
+    private long lastID = -1;
+    private Long[] arrayView = null;
 
     public AtomResonanceFactory() {
     }
@@ -59,7 +59,7 @@ public class AtomResonanceFactory extends ResonanceFactory implements FreezeList
         return map.get(id);
     }
 
-    public static void clean() {
+    public void clean() {
         Map<Long, AtomResonance> resonancesNew = new TreeMap<Long, AtomResonance>();
         for (Map.Entry<Long, AtomResonance> entry : map.entrySet()) {
             AtomResonance resonance = entry.getValue();
@@ -72,7 +72,7 @@ public class AtomResonanceFactory extends ResonanceFactory implements FreezeList
         arrayView = null;
     }
 
-    public synchronized static HashMap<String, ArrayList<AtomResonance>> getLabelMap() {
+    public synchronized HashMap<String, ArrayList<AtomResonance>> getLabelMap() {
         clean();
         HashMap<String, ArrayList<AtomResonance>> labelMap = new HashMap<>();
         map.values().forEach((resonance) -> {
@@ -94,7 +94,7 @@ public class AtomResonanceFactory extends ResonanceFactory implements FreezeList
         return labelMap;
     }
 
-    public static AtomResonance merge(AtomResonance resonanceA, AtomResonance resonanceB) {
+    public AtomResonance merge(AtomResonance resonanceA, AtomResonance resonanceB) {
         if (resonanceA == resonanceB) {
             return null;
         }
@@ -124,7 +124,7 @@ public class AtomResonanceFactory extends ResonanceFactory implements FreezeList
         return resonanceA;
     }
 
-    public static synchronized void merge(String condition, double tol) {
+    public synchronized void merge(String condition, double tol) {
         HashMap<String, ArrayList<AtomResonance>> labelMap = getLabelMap();
         for (String label : labelMap.keySet()) {
             ArrayList<AtomResonance> resList = labelMap.get(label);
@@ -178,7 +178,7 @@ public class AtomResonanceFactory extends ResonanceFactory implements FreezeList
         arrayView = null;
     }
 
-    public static void assignFrozenAtoms(String condition) {
+    public void assignFrozenAtoms(String condition) {
         for (AtomResonance res : map.values()) {
             for (PeakDim peakDim : res.peakDims) {
                 if (peakDim.getPeak().getPeakList().getSampleConditionLabel().equals(condition)) {
