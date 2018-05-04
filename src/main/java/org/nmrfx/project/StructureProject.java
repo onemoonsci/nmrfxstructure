@@ -155,7 +155,7 @@ public class StructureProject extends Project {
 
     }
 
-    void loadMolecule(Path file) throws MoleculeIOException {
+    public static void loadMolecule(Path file) throws MoleculeIOException {
         if (file.toString().endsWith(".pdb")) {
             PDBFile pdbReader = new PDBFile();
             pdbReader.readSequence(file.toString(), false);
