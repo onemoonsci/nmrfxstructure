@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -89,7 +90,7 @@ public class StructureProject extends Project {
                             loadShiftFiles(subDirectory, false);
                             break;
                         case "refshifts":
-                            loadShiftFiles(subDirectory, false);
+                            loadShiftFiles(subDirectory, true);
                             break;
                         default:
                             throw new IllegalStateException("Invalid subdir type");
@@ -111,27 +112,57 @@ public class StructureProject extends Project {
     }
 
     void loadMolecules(Path directory) throws MoleculeIOException {
+        Path sstructPath = null;
         if (Files.isDirectory(directory)) {
             try (DirectoryStream<Path> fileStream = Files.newDirectoryStream(directory)) {
                 for (Path path : fileStream) {
                     if (Files.isDirectory(path)) {
                         loadMoleculeEntities(path);
                     } else {
-                        loadMolecule(path);
+                        if (path.toString().endsWith(".2str")) {
+                            sstructPath = path;
+                        } else {
+                            loadMolecule(path);
+                        }
                     }
 
                 }
             } catch (DirectoryIteratorException | IOException ex) {
             }
         }
+        if (sstructPath != null) {
+            try {
+                List<String> content = Files.readAllLines(sstructPath);
+                if (Molecule.getActive() != null) {
+                    loadSecondaryStructure(Molecule.getActive(), content);
+                }
+            } catch (IOException ioE) {
+                throw new MoleculeIOException(ioE.getMessage());
+            }
+        }
     }
 
-    void loadMolecule(Path file) throws MoleculeIOException {
+    void loadSecondaryStructure(Molecule molecule, List<String> fileContent) {
+        // fixme use yaml ?
+        for (String s : fileContent) {
+            if (s.contains(("vienna"))) {
+                String[] fields = s.split(":");
+                if (fields.length == 2) {
+                    molecule.setDotBracket(fields[1].trim());
+                }
+            }
+        }
+
+    }
+
+    public static void loadMolecule(Path file) throws MoleculeIOException {
         if (file.toString().endsWith(".pdb")) {
             PDBFile pdbReader = new PDBFile();
             pdbReader.readSequence(file.toString(), false);
             System.out.println("read mol: " + file.toString());
         } else if (file.toString().endsWith(".sdf")) {
+            SDFile.read(file.toString(), null);
+        } else if (file.toString().endsWith(".mol")) {
             SDFile.read(file.toString(), null);
         } else if (file.toString().endsWith(".seq")) {
             Sequence seq = new Sequence();
@@ -170,6 +201,8 @@ public class StructureProject extends Project {
                                     PDBFile.readResidue(pathName, null, mol, baseName);
                                 }
                             } else if (fileName.endsWith(".sdf")) {
+                                SDFile.readResidue(pathName, null, mol, baseName);
+                            } else if (fileName.endsWith(".mol")) {
                                 SDFile.readResidue(pathName, null, mol, baseName);
                             }
                         } catch (MoleculeIOException molE) {

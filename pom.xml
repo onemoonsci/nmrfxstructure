@@ -12,14 +12,14 @@
     <groupId>org.nmrfx</groupId>
     <artifactId>structure</artifactId>
     <packaging>jar</packaging>
-    <version>10.2.1</version>
+    <version>10.2.6</version>
     <name>nmrfxstructure</name>
     <url>http://maven.apache.org</url>
     <dependencies>
         <dependency>
             <groupId>org.nmrfx</groupId>
             <artifactId>processor</artifactId>
-            <version>10.2.1</version>
+            <version>10.2.6</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -111,6 +111,11 @@
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
             <version>1.18</version>
+        </dependency>
+        <dependency>
+            <groupId>joptimizer</groupId>
+            <artifactId>joptimizer</artifactId>
+            <version>3.2.0</version>
         </dependency>
     </dependencies>
     <build>
