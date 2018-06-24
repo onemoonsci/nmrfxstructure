@@ -51,7 +51,11 @@ public class AtomResonanceFactory extends ResonanceFactory implements FreezeList
     }
 
     public Resonance build(long id) {
-        Resonance resonance = new AtomResonance(id);
+        AtomResonance resonance = (AtomResonance) get(id);
+        if (resonance == null) {
+            resonance = new AtomResonance(id);
+            map.put(id, resonance);
+        }
         return resonance;
     }
 
