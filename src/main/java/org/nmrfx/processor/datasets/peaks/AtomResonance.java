@@ -17,6 +17,8 @@
  */
 package org.nmrfx.processor.datasets.peaks;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import org.nmrfx.structure.chemistry.Atom;
 import org.nmrfx.structure.chemistry.Compound;
 import org.nmrfx.structure.chemistry.Molecule;
@@ -34,6 +36,18 @@ import java.util.List;
 public class AtomResonance extends SimpleResonance {
 
     Atom atom = null;
+    static String[] resonanceLoopStrings = {
+        "_Resonance.ID",
+        "_Resonance.Name",
+        "_Resonance.Resonance_set_ID",
+        "_Resonance.Spin_system_ID ",
+        "_Resonance.Resonance_linker_list_ID ",};
+    static String[] resonanceCovalentLinkStrings = {
+        "_Resonance_covalent_link.Resonance_ID_1",
+        "_Resonance_covalent_link.Resonance_ID_2",};
+
+    Object resonanceSet = null;
+    Object ssID = null;
 
     public AtomResonance(long id) {
         super(id);
@@ -180,4 +194,30 @@ public class AtomResonance extends SimpleResonance {
     public List<PeakDim> getPeakDims() {
         return peakDims;
     }
+
+    String toSTARResonanceString() {
+        StringBuffer result = new StringBuffer();
+        String sep = " ";
+        char stringQuote = '"';
+        result.append(String.valueOf(getID()) + sep);
+        result.append(stringQuote);
+        result.append(getName());
+        result.append(stringQuote);
+        result.append(sep);
+        if (resonanceSet == null) {
+            result.append(".");
+        } else {
+            // result.append(String.valueOf(resonanceSet.getID()));
+        }
+        result.append(sep);
+        if (ssID == null) {
+            result.append(".");
+        } else {
+            result.append(ssID);
+        }
+        result.append(sep);
+        result.append("1");
+        return result.toString();
+    }
+
 }

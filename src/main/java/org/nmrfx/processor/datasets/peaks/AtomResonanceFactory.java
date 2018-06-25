@@ -17,10 +17,13 @@
  */
 package org.nmrfx.processor.datasets.peaks;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
+import static org.nmrfx.processor.datasets.peaks.AtomResonance.resonanceLoopStrings;
 import org.nmrfx.structure.chemistry.Atom;
 import org.nmrfx.structure.chemistry.Molecule;
 
@@ -224,4 +227,38 @@ public class AtomResonanceFactory extends ResonanceFactory implements FreezeList
             }
         }
     }
+
+    public void writeResonancesSTAR3(FileWriter chan)
+            throws IOException {
+
+        chan.write("save_resonance_linker_list\n");
+
+        chan.write("_Resonance_linker_list.Sf_category    ");
+        chan.write("resonance_linker\n");
+
+        chan.write("_Resonance_linker_list.Sf_framecode   ");
+        chan.write("resonance_linker_list\n");
+
+        chan.write("_Resonance_linker_list.Details        ");
+        chan.write(".\n");
+
+        chan.write("\n");
+        String[] loopStrings = resonanceLoopStrings;
+        chan.write("loop_\n");
+        for (int j = 0; j < loopStrings.length; j++) {
+            chan.write(loopStrings[j] + "\n");
+        }
+        chan.write("\n");
+        for (Map.Entry<Long, AtomResonance> entry : map.entrySet()) {
+            AtomResonance resonance = entry.getValue();
+            if (resonance == null) {
+                throw new IOException("Resonance.writeResonances: resonance null at ");
+            }
+            chan.write(resonance.toSTARResonanceString() + "\n");
+        }
+        chan.write("stop_\n");
+        chan.write("save_\n");
+
+    }
+
 }

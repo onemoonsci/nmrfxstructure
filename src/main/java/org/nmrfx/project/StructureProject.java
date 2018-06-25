@@ -5,6 +5,7 @@
  */
 package org.nmrfx.project;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.DirectoryIteratorException;
@@ -22,8 +23,13 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.nmrfx.processor.datasets.peaks.InvalidPeakException;
+import org.nmrfx.processor.star.ParseException;
+import org.nmrfx.structure.chemistry.InvalidMoleculeException;
 import org.nmrfx.structure.chemistry.Molecule;
 import org.nmrfx.structure.chemistry.io.MoleculeIOException;
+import org.nmrfx.structure.chemistry.io.NMRStarReader;
+import org.nmrfx.structure.chemistry.io.NMRStarWriter;
 import org.nmrfx.structure.chemistry.io.PDBFile;
 import org.nmrfx.structure.chemistry.io.PPMFiles;
 import org.nmrfx.structure.chemistry.io.SDFile;
@@ -74,20 +80,35 @@ public class StructureProject extends Project {
     }
 
     public void loadStructureProject(Path projectDir) throws IOException, MoleculeIOException, IllegalStateException {
-        loadProject(projectDir);
+        loadProject(projectDir, "datasets");
         FileSystem fileSystem = FileSystems.getDefault();
 
-        String[] subDirTypes = {"molecules", "shifts", "refshifts"};
+        String[] subDirTypes = {"star", "peaks", "molecules", "shifts", "refshifts"};
         if (projectDir != null) {
+            boolean readSTAR3 = false;
             for (String subDir : subDirTypes) {
+                System.out.println("read " + subDir + " " + readSTAR3);
                 Path subDirectory = fileSystem.getPath(projectDir.toString(), subDir);
                 if (Files.exists(subDirectory) && Files.isDirectory(subDirectory) && Files.isReadable(subDirectory)) {
                     switch (subDir) {
+                        case "star":
+                            readSTAR3 = loadSTAR3(subDirectory);
+                            break;
                         case "molecules":
-                            loadMolecules(subDirectory);
+                            if (!readSTAR3) {
+                                loadMolecules(subDirectory);
+                            }
+                            break;
+                        case "peaks":
+                            if (!readSTAR3) {
+                                System.out.println("readpeaks");
+                                loadProject(projectDir, "peaks");
+                            }
                             break;
                         case "shifts":
-                            loadShiftFiles(subDirectory, false);
+                            if (!readSTAR3) {
+                                loadShiftFiles(subDirectory, false);
+                            }
                             break;
                         case "refshifts":
                             loadShiftFiles(subDirectory, true);
@@ -102,13 +123,44 @@ public class StructureProject extends Project {
         this.projectDir = projectDir;
     }
 
+    private File getSTAR3FileName() {
+        File directory = FileSystems.getDefault().getPath(projectDir.toString(), "star").toFile();
+        Path starFile = FileSystems.getDefault().getPath(directory.toString(), projectDir.getFileName().toString() + ".str");
+        return starFile.toFile();
+    }
+
+    private File getSTAR3FileName(Path directory) {
+        Path starFile = FileSystems.getDefault().getPath(directory.toString(), projectDir.getFileName().toString() + ".str");
+        return starFile.toFile();
+
+    }
+
     public void saveProject() throws IOException {
-        if (projectDir == null) {
-            throw new IllegalArgumentException("Project directory not set");
+        try {
+            if (projectDir == null) {
+                throw new IllegalArgumentException("Project directory not set");
+            }
+            super.saveProject();
+            NMRStarWriter.writeAll(getSTAR3FileName());
+            //saveShifts(false);
+            saveShifts(true);
+        } catch (ParseException | InvalidPeakException | InvalidMoleculeException ex) {
+            throw new IOException(ex.getMessage());
         }
-        super.saveProject();
-        saveShifts(false);
-        saveShifts(true);
+    }
+
+    boolean loadSTAR3(Path directory) throws IOException {
+        File starFile = getSTAR3FileName(directory);
+        boolean result = false;
+        if (starFile.exists()) {
+            try {
+                NMRStarReader.read(starFile);
+                result = true;
+            } catch (ParseException ex) {
+                throw new IOException(ex.getMessage());
+            }
+        }
+        return result;
     }
 
     void loadMolecules(Path directory) throws MoleculeIOException {
