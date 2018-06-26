@@ -142,7 +142,7 @@ public class StructureProject extends Project {
             }
             super.saveProject();
             NMRStarWriter.writeAll(getSTAR3FileName());
-            //saveShifts(false);
+            saveShifts(false);
             saveShifts(true);
         } catch (ParseException | InvalidPeakException | InvalidMoleculeException ex) {
             throw new IOException(ex.getMessage());
