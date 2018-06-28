@@ -68,10 +68,13 @@ public class AtomResonanceFactory extends ResonanceFactory implements FreezeList
 
     public void clean() {
         Map<Long, AtomResonance> resonancesNew = new TreeMap<Long, AtomResonance>();
+        long resID = 0;
         for (Map.Entry<Long, AtomResonance> entry : map.entrySet()) {
             AtomResonance resonance = entry.getValue();
             if (((resonance.getPeakDims() != null) && (resonance.getPeakDims().size() != 0))) {
-                resonancesNew.put(entry.getKey(), resonance);
+                resonance.setID(resID);
+                resonancesNew.put(resID, resonance);
+                resID++;
             }
         }
         map.clear();
@@ -126,7 +129,7 @@ public class AtomResonanceFactory extends ResonanceFactory implements FreezeList
 
         }
         resonanceB.peakDims = null;
-        map.remove(resonanceB.id);
+        map.remove(resonanceB.getID());
         arrayView = null;
         return resonanceA;
     }
@@ -213,7 +216,6 @@ public class AtomResonanceFactory extends ResonanceFactory implements FreezeList
             AtomResonance res = (AtomResonance) peakDim.getResonance();
             Double ppmAvg = res.getPPMAvg(condition);
             Atom atom = Molecule.getAtomByName(peakDim.getLabel());
-            System.out.println(ppmAvg);
             if (peakDim.isFrozen()) {
                 if (atom != null) {
                     if (ppmAvg != null) {
@@ -222,7 +224,9 @@ public class AtomResonanceFactory extends ResonanceFactory implements FreezeList
                     res.atomName = atom.getFullName();
                 }
             } else {
-                atom.setPPMValidity(0, false);
+                if (atom != null) {
+                    atom.setPPMValidity(0, false);
+                }
                 res.atomName = "";
             }
         }
