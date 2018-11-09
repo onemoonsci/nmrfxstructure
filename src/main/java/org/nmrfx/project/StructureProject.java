@@ -253,9 +253,9 @@ public class StructureProject extends Project {
                                     PDBFile.readResidue(pathName, null, mol, baseName);
                                 }
                             } else if (fileName.endsWith(".sdf")) {
-                                SDFile.readResidue(pathName, null, mol, baseName);
+                                SDFile.read(pathName, null, mol, baseName);
                             } else if (fileName.endsWith(".mol")) {
-                                SDFile.readResidue(pathName, null, mol, baseName);
+                                SDFile.read(pathName, null, mol, baseName);
                             }
                         } catch (MoleculeIOException molE) {
                         }
