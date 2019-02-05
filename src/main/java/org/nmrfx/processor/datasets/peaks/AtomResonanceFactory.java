@@ -211,7 +211,7 @@ public class AtomResonanceFactory extends ResonanceFactory implements FreezeList
     @Override
     public void freezeHappened(Peak peak, boolean state) {
         System.out.println("freeze " + peak.getName() + " " + state);
-        for (PeakDim peakDim : peak.peakDim) {
+        for (PeakDim peakDim : peak.peakDims) {
             String condition = peak.getPeakList().getSampleConditionLabel();
             AtomResonance res = (AtomResonance) peakDim.getResonance();
             Double ppmAvg = res.getPPMAvg(condition);
