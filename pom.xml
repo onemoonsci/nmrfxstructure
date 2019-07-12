@@ -19,7 +19,7 @@
         <dependency>
             <groupId>org.nmrfx</groupId>
             <artifactId>processor</artifactId>
-            <version>10.3.35</version>
+            <version>10.3.36</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
