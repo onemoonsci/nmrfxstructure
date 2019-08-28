@@ -2,3 +2,4 @@
 /sandbox/
 /installers/
 *.xml
+.DS_Store
