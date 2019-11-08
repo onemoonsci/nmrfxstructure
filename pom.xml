@@ -12,14 +12,14 @@
     <groupId>org.nmrfx</groupId>
     <artifactId>structure</artifactId>
     <packaging>jar</packaging>
-    <version>10.3.46</version>
+    <version>10.3.47</version>
     <name>nmrfxstructure</name>
     <url>http://maven.apache.org</url>
     <dependencies>
         <dependency>
             <groupId>org.nmrfx</groupId>
             <artifactId>processor</artifactId>
-            <version>10.3.46</version>
+            <version>10.3.47</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
