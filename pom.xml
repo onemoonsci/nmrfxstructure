@@ -217,18 +217,18 @@
                 <executions>
                     <execution>
                         <configuration>
-                            <executable>python</executable>
                             <workingDirectory>src/test/python/</workingDirectory>
+                            <executable>java</executable>
+                            <classpathScope>compile</classpathScope>
                             <arguments>
-                                <argument>testmain.py</argument>
-                                <argument>${version}</argument>
-                            </arguments>    
-                            <environmentVariables>
-                                <PYTHONPATH>../../:$PYTHONPATH</PYTHONPATH>
-                            </environmentVariables>
+                                <argument>-classpath</argument>
+                                <classpath/>
+                                <argument>org.python.util.jython</argument>
+                                <argument>runtests.py</argument>
+                            </arguments>
                         </configuration>
                         <id>python-test</id>
-                        <phase>integration-test</phase>
+                        <phase>test</phase>
                         <goals>
                             <goal>exec</goal>
                         </goals>
