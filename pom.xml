@@ -7,6 +7,11 @@
             <url>http://nativelibs4java.sourceforge.net/maven</url>
         </repository>
 
+        <repository>
+            <id>bedatadriven</id>
+            <name>bedatadriven public repo</name>
+            <url>https://nexus.bedatadriven.com/content/groups/public/</url>
+        </repository>
     </repositories>
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.nmrfx</groupId>
@@ -14,6 +19,9 @@
     <packaging>jar</packaging>
     <version>10.3.80</version>
     <name>nmrfxstructure</name>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
     <url>http://maven.apache.org</url>
     <dependencies>
         <dependency>
@@ -122,6 +130,7 @@
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.1</version>
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
@@ -187,6 +196,24 @@
                             </arguments>
                         </configuration>
                     </execution>
+                    <execution>
+                        <configuration>
+                            <workingDirectory>src/test/python/</workingDirectory>
+                            <executable>java</executable>
+                            <classpathScope>compile</classpathScope>
+                            <arguments>
+                                <argument>-classpath</argument>
+                                <classpath/>
+                                <argument>org.python.util.jython</argument>
+                                <argument>runtests.py</argument>
+                            </arguments>
+                        </configuration>
+                        <id>python-test</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
@@ -208,30 +235,6 @@
                                 <descriptor>src/main/assembly/bin.xml</descriptor>
                             </descriptors>
                         </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <configuration>
-                            <workingDirectory>src/test/python/</workingDirectory>
-                            <executable>java</executable>
-                            <classpathScope>compile</classpathScope>
-                            <arguments>
-                                <argument>-classpath</argument>
-                                <classpath/>
-                                <argument>org.python.util.jython</argument>
-                                <argument>runtests.py</argument>
-                            </arguments>
-                        </configuration>
-                        <id>python-test</id>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
                     </execution>
                 </executions>
             </plugin>
