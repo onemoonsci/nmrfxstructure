@@ -290,16 +290,18 @@ public class StructureProject extends Project {
         if (projectDir == null) {
             throw new IllegalArgumentException("Project directory not set");
         }
-        int ppmSet = 0;
-        String fileName = String.valueOf(ppmSet) + "_" + "ppm.txt";
-        String subDir = refMode ? "refshifts" : "shifts";
-        Path peakFilePath = fileSystem.getPath(projectDir.toString(), subDir, fileName);
-        // fixme should only write if file doesn't already exist or peaklist changed since read
-        try (FileWriter writer = new FileWriter(peakFilePath.toFile())) {
-            PPMFiles.writePPM(mol, writer, ppmSet, refMode);
-            writer.close();
-        } catch (IOException ioE) {
-            throw ioE;
+        int nSets = refMode ? mol.getRefPPMSetCount() : mol.getPPMSetCount();
+        for (int ppmSet = 0; ppmSet < nSets; ppmSet++) {
+            String fileName = String.valueOf(ppmSet) + "_" + "ppm.txt";
+            String subDir = refMode ? "refshifts" : "shifts";
+            Path peakFilePath = fileSystem.getPath(projectDir.toString(), subDir, fileName);
+            // fixme should only write if file doesn't already exist or peaklist changed since read
+            try (FileWriter writer = new FileWriter(peakFilePath.toFile())) {
+                PPMFiles.writePPM(mol, writer, ppmSet, refMode);
+                writer.close();
+            } catch (IOException ioE) {
+                throw ioE;
+            }
         }
     }
 
