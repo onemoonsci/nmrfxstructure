@@ -27,6 +27,9 @@ import org.nmrfx.processor.datasets.peaks.InvalidPeakException;
 import org.nmrfx.processor.star.ParseException;
 import org.nmrfx.structure.chemistry.InvalidMoleculeException;
 import org.nmrfx.structure.chemistry.Molecule;
+import org.nmrfx.structure.chemistry.constraints.AngleConstraintSet;
+import org.nmrfx.structure.chemistry.constraints.NoeSet;
+import org.nmrfx.structure.chemistry.constraints.RDCConstraintSet;
 import org.nmrfx.structure.chemistry.io.MoleculeIOException;
 import org.nmrfx.structure.chemistry.io.NMRStarReader;
 import org.nmrfx.structure.chemistry.io.NMRStarWriter;
@@ -42,9 +45,29 @@ import org.nmrfx.structure.chemistry.io.Sequence;
 public class StructureProject extends Project {
 
     public final Map<String, Molecule> molecules = new HashMap<>();
+    public Molecule activeMol;
+
+    public final Map compoundMap;
+
+    public final HashMap<String, NoeSet> NOE_SETS;
+    public NoeSet ACTIVE_SET;
+
+    public HashMap<String, AngleConstraintSet> angleSets;
+    public AngleConstraintSet activeSet;
+
+    public HashMap<String, RDCConstraintSet> rdcSets;
+    public RDCConstraintSet activeRDCSet;
 
     public StructureProject(String name) {
         super(name);
+        compoundMap = new HashMap();
+        activeMol = null;
+        NOE_SETS = new HashMap<String, NoeSet>();
+        ACTIVE_SET = null;
+        angleSets = new HashMap<String, AngleConstraintSet>();
+        activeSet = AngleConstraintSet.addSet("default");
+        rdcSets = new HashMap<String, RDCConstraintSet>();
+        activeRDCSet = null;
     }
 
     public static StructureProject getActive() {
@@ -80,6 +103,9 @@ public class StructureProject extends Project {
     }
 
     public void loadStructureProject(Path projectDir) throws IOException, MoleculeIOException, IllegalStateException {
+        Project currentProject=getActive();
+        setActive();
+
         loadProject(projectDir, "datasets");
         FileSystem fileSystem = FileSystems.getDefault();
 
@@ -121,6 +147,7 @@ public class StructureProject extends Project {
             }
         }
         this.projectDir = projectDir;
+        currentProject.setActive();
     }
 
     private File getSTAR3FileName() {
@@ -136,6 +163,8 @@ public class StructureProject extends Project {
     }
 
     public void saveProject() throws IOException {
+        Project currentProject=getActive();
+        setActive();
         try {
             if (projectDir == null) {
                 throw new IllegalArgumentException("Project directory not set");
@@ -147,6 +176,7 @@ public class StructureProject extends Project {
         } catch (ParseException | InvalidPeakException | InvalidMoleculeException ex) {
             throw new IOException(ex.getMessage());
         }
+        currentProject.setActive();
     }
 
     boolean loadSTAR3(Path directory) throws IOException {
