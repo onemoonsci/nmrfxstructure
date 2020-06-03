@@ -17,7 +17,7 @@
     <groupId>org.nmrfx</groupId>
     <artifactId>structure</artifactId>
     <packaging>jar</packaging>
-    <version>10.3.87</version>
+    <version>10.3.88</version>
     <name>nmrfxstructure</name>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -27,7 +27,7 @@
         <dependency>
             <groupId>org.nmrfx</groupId>
             <artifactId>processor</artifactId>
-            <version>10.3.87</version>
+            <version>10.3.88</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
