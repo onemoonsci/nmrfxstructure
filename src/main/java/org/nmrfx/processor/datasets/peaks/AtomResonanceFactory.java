@@ -215,7 +215,10 @@ public class AtomResonanceFactory extends ResonanceFactory implements FreezeList
             String condition = peak.getPeakList().getSampleConditionLabel();
             AtomResonance res = (AtomResonance) peakDim.getResonance();
             Double ppmAvg = res.getPPMAvg(condition);
-            Atom atom = Molecule.getAtomByName(peakDim.getLabel());
+            Atom atom=null;
+            if (Molecule.getActive()!=null) {
+                atom = Molecule.getAtomByName(peakDim.getLabel());
+            }
             if (peakDim.isFrozen()) {
                 if (atom != null) {
                     if (ppmAvg != null) {
