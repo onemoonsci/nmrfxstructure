@@ -1,5 +1,7 @@
 /target/
 /sandbox/
+/tmp/
 /installers/
 *.xml
+*.class
 .DS_Store
