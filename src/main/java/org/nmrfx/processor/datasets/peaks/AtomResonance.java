@@ -82,7 +82,7 @@ public class AtomResonance extends SimpleResonance {
         List<String> nameColumn = loop.getColumnAsList("Name");
         List<String> resSetColumn = loop.getColumnAsList("Resonance_set_ID");
         // fixme unused ArrayList ssColumn = loop.getColumnAsList("Spin_system_ID");
-        AtomResonanceFactory resFactory = (AtomResonanceFactory) PeakDim.resFactory;
+        AtomResonanceFactory resFactory = (AtomResonanceFactory) PeakDim.resFactory();
         for (int i = 0, n = idColumn.size(); i < n; i++) {
             String value = null;
             long idNum = 0;
@@ -170,7 +170,7 @@ public class AtomResonance extends SimpleResonance {
                 //}
 
                 String mapID = entityAssemblyID + "." + entityID + "." + iRes;
-                Compound compound = (Compound) Molecule.compoundMap.get(mapID);
+                Compound compound = (Compound) Molecule.compoundMap().get(mapID);
                 if (compound == null) {
                     //throw new TclException("invalid compound in assignments saveframe \""+mapID+"\"");
                     System.err.println("invalid compound in assignments saveframe \"" + mapID + "\"");
